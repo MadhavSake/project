@@ -1,43 +1,38 @@
+#Deployment
+###controllers/pb-deploy.tml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "mysql.fullname" . }}
-  namespace: {{ .Release.Namespace }}
-  labels:
-    app: {{ template "mysql.fullname" . }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: "{{ .Release.Name }}"
-    heritage: "{{ .Release.Service }}"
-{{- with .Values.deploymentAnnotations }}
-  annotations:
-{{ toYaml . | indent 4 }}
-{{- end }}
-
+  name: petclinic-deployment
 spec:
+  replicas: 1
   strategy:
-{{ toYaml .Values.strategy | indent 4 }}
+    type: RollingUpdate
+    rollingUpdate:
+  minReadySeconds: 5
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: {{ template "mysql.fullname" . }}
-      release: {{ .Release.Name }}
+      app: petclinic-app
   template:
     metadata:
       labels:
-        app: {{ template "mysql.fullname" . }}
-        release: {{ .Release.Name }}
-{{- with .Values.podLabels }}
-{{ toYaml . | indent 8 }}
-{{- end }}
-{{- with .Values.podAnnotations }}
-      annotations:
-{{ toYaml . | indent 8 }}
-{{- end }}
+        app: petclinic-app
     spec:
-      {{- if .Values.schedulerName }}
-      schedulerName: "{{ .Values.schedulerName }}"
-      {{- end }}
-      {{- if .Values.imagePullSecrets }}
+      containers:
+      - name: petclinic-container
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: '1'
+            memory: '1G'
+          requests:
+            cpu: '1'
+            memory: '1G'
+        ports:
+        - containerPort: 8080
       imagePullSecrets:
-{{ toYaml .Values.imagePullSecrets | indent 8 }}
-      {{- end }}
-      {{- if .Values.priorityClassName }}
+      - name: regcred
+
+
